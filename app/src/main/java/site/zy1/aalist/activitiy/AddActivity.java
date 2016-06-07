@@ -11,14 +11,19 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 import site.zy1.aalist.R;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class AddActivity extends ActionBarActivity {
     private SharedPreferences sharedPreferences;
     private String username;
     private TextView tv_setName;
+    private EditText et_balance, et_description, et_date;
 
     @Override
     protected void onStart() {
@@ -32,6 +37,12 @@ public class AddActivity extends ActionBarActivity {
         setContentView(R.layout.activity_add);
         sharedPreferences = getSharedPreferences("app", MODE_PRIVATE);
         tv_setName = (TextView) findViewById(R.id.tv_setName);
+        et_balance = (EditText) findViewById(R.id.et1_balance);
+        et_date = (EditText) findViewById(R.id.et_date);
+        et_description = (EditText) findViewById(R.id.et_description);
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        et_date.setText(sdf.format(date));
         refreshName();
     }
 
@@ -46,13 +57,32 @@ public class AddActivity extends ActionBarActivity {
         }
     }
 
-    public void add(View view) {
-        if(username == null){
-            Toast.makeText(this.getApplicationContext(), "请在右上角菜单中选择你是谁", Toast.LENGTH_SHORT);
+    private boolean validate(){
+        if(username == null) {
+            Toast.makeText(this.getApplicationContext(), "请在右上角菜单中选择你是谁", Toast.LENGTH_SHORT).show();
+            return false;
         }
-        Intent intent = new Intent();
-        intent.setClass(this.getApplicationContext(), MainActivity.class);
-        startActivity(intent);
+        if(et_balance.getText().toString().trim().equals("")){
+            Toast.makeText(this.getApplicationContext(), "请填写金额", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if(et_description.getText() .toString().trim().equals("")){
+            Toast.makeText(this.getApplicationContext(), "请填写用途", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        if(et_date.getText() .toString().trim().equals("")){
+            Toast.makeText(this.getApplicationContext(), "请填写日期", Toast.LENGTH_SHORT).show();
+            return false;
+        }
+        return true;
+    }
+
+    public void add(View view) {
+        if(validate()) {
+            Intent intent = new Intent();
+            intent.setClass(this.getApplicationContext(), MainActivity.class);
+            startActivity(intent);
+        }
     }
 
     @Override

@@ -53,7 +53,7 @@
     <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/editText3" android:layout_alignBottom="@+id/tv_date"
+            android:id="@+id/et_date" android:layout_alignBottom="@+id/tv_date"
             android:layout_alignLeft="@+id/et_description" android:layout_alignStart="@+id/et_description"
             android:layout_alignRight="@+id/et_description" android:layout_alignEnd="@+id/et_description"/>
     <Button
@@ -61,10 +61,11 @@
             android:layout_height="wrap_content"
             android:text="添加"
             android:onClick="add"
-            android:id="@+id/btn_add" android:layout_below="@+id/editText3"
-            android:layout_marginTop="55dp" android:layout_alignLeft="@+id/editText3"
-            android:layout_alignStart="@+id/editText3" android:layout_alignRight="@+id/editText3"
-            android:layout_alignEnd="@+id/editText3"/>
+            android:id="@+id/btn_add"
+            android:layout_marginTop="57dp"
+            android:layout_below="@+id/et_date" android:layout_alignLeft="@+id/et_date"
+            android:layout_alignStart="@+id/et_date" android:layout_alignRight="@+id/et_date"
+            android:layout_alignEnd="@+id/et_date"/>
     <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
