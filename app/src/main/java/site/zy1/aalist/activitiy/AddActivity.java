@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.ActionBarActivity;
+import android.util.JsonReader;
 import android.util.JsonWriter;
 import android.util.Log;
 import android.view.Menu;
@@ -22,6 +23,7 @@ import site.zy1.aalist.R;
 import site.zy1.aalist.model.AAListItem;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -56,13 +58,35 @@ public class AddActivity extends ActionBarActivity {
                                         "application/json");
                                 conn.setRequestProperty("charset", "utf-8");
                                 conn.setDoOutput(true);
+                                conn.setDoInput(true);
                                 JsonWriter jsonWriter = new JsonWriter(new OutputStreamWriter(conn.getOutputStream()));
                                 jsonWriter.beginObject().name("name").value(username).name("balance").value(balance).name("description").value(description).name("date").value(date).endObject();
                                 jsonWriter.flush();
                                 jsonWriter.close();
-                                Intent intent = new Intent();
-                                intent.setClass(AddActivity.this.getApplicationContext(), MainActivity.class);
-                                startActivity(intent);
+
+                                JsonReader jsonReader = new JsonReader(new InputStreamReader(conn.getInputStream()));
+                                jsonReader.beginObject();
+                                boolean success = false;
+                                while (jsonReader.hasNext()) {
+                                    String name = jsonReader.nextName();
+                                    if ("success".equals(name)) {
+                                        success = jsonReader.nextBoolean();
+                                    } else if ("message".equals(name)) {
+                                        String message = jsonReader.nextString();
+                                        Log.i("response", message);
+                                    }
+                                }
+                                jsonReader.endObject();
+                                jsonReader.close();
+                                if (success) {
+                                    Intent intent = new Intent();
+                                    intent.setClass(AddActivity.this.getApplicationContext(), MainActivity.class);
+                                    startActivity(intent);
+                                }else{
+                                    Message m = new Message();
+                                    m.what = -1;
+                                    handler.dispatchMessage(m);
+                                }
                             } catch (IOException e) {
                                 e.printStackTrace();
                                 Message m = new Message();
@@ -99,7 +123,7 @@ public class AddActivity extends ActionBarActivity {
 
     }
 
-    public void list(View v){
+    public void list(View v) {
         Intent intent = new Intent();
         intent.setClass(AddActivity.this.getApplicationContext(), MainActivity.class);
         startActivity(intent);

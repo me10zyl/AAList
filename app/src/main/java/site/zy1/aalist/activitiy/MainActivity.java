@@ -1,5 +1,9 @@
 package site.zy1.aalist.activitiy;
 
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -9,6 +13,8 @@ import android.util.JsonReader;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 import org.json.JSONObject;
@@ -39,7 +45,7 @@ public class MainActivity extends ActionBarActivity {
     private TotalListAdapter totalListAdapter;
     private Handler handler = new Handler(new Handler.Callback() {
         @Override
-        public boolean handleMessage(Message message) {
+        public boolean handleMessage(final Message message) {
             switch (message.what) {
                 case 0:
                     new AsyncTask<String, Void, AAListItem>(){
@@ -60,6 +66,8 @@ public class MainActivity extends ActionBarActivity {
                                 conn.setConnectTimeout(10000);
 
                                 BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+                                aaList.clear();
+                                totalList.clear();
                                 JsonReader jsonReader = new JsonReader(br);
                                 jsonReader.beginArray();
                                 while (jsonReader.hasNext()) {
@@ -109,11 +117,74 @@ public class MainActivity extends ActionBarActivity {
                         }
                     }.execute();
                     break;
+                case 2:
+                    new AsyncTask<String, Void, AAListItem>() {
+                        @Override
+                        protected AAListItem doInBackground(String... strings) {
+                            HttpURLConnection conn = null;
+                            try {
+                                URL url = new URL("http://" + address + "/delete/" + message.arg1);
+                                conn = (HttpURLConnection) url.openConnection();
+                                conn.setRequestProperty("accept", "*/*");
+                                conn.setRequestProperty("connection", "Keep-Alive");
+                                conn.setRequestMethod("GET");
+                                conn.setRequestProperty("Content-Type",
+                                        "application/json");
+                                conn.setRequestProperty("charset", "utf-8");
+                                conn.setDoInput(true);
+                                conn.setConnectTimeout(10000);
+
+                                JsonReader jsonReader = new JsonReader(new InputStreamReader(conn.getInputStream()));
+                                jsonReader.beginObject();
+                                boolean success = false;
+                                while (jsonReader.hasNext()) {
+                                    String name = jsonReader.nextName();
+                                    if ("success".equals(name)) {
+                                        success = jsonReader.nextBoolean();
+                                    } else if ("message".equals(name)) {
+                                        String message = jsonReader.nextString();
+                                        Log.i("response", message);
+                                    }
+                                }
+                                jsonReader.endObject();
+                                jsonReader.close();
+                                Message m = new Message();
+                                if (success) {
+                                    m.what = -2;
+                                }else{
+                                    m.what = -1;
+                                }
+                                handler.dispatchMessage(m);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                                Message m = new Message();
+                                m.what = -1;
+                                handler.dispatchMessage(m);
+                            }finally {
+                                if(conn!= null){
+                                    conn.disconnect();
+                                }
+                            }
+                            return null;
+                        }
+                    }.execute();
+                    break;
                 case -1:
                     handler.post(new Runnable() {
                         @Override
                         public void run() {
                             Toast.makeText(MainActivity.this.getApplicationContext(), "没联网或者服务器出错", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                    break;
+                case -2:
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(MainActivity.this.getApplicationContext(), "删除成功", Toast.LENGTH_SHORT).show();
+                            Message m = new Message();
+                            m.what = 0;
+                            handler.dispatchMessage(m);
                         }
                     });
                     break;
@@ -138,6 +209,22 @@ public class MainActivity extends ActionBarActivity {
         handler.dispatchMessage(m);
         lv1.setAdapter(aaListAdapter);
         lv2.setAdapter(totalListAdapter);
+        lv1.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> adapterView, View view, int i, long l) {
+                final AAListItem item = (AAListItem) aaListAdapter.getItem(i);
+                new AlertDialog.Builder(MainActivity.this).setTitle("确定要删除？").setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        Message m  = new Message();
+                        m.what = 2;
+                        m.arg1 = item.getId();
+                        handler.dispatchMessage(m);
+                    }
+                }).setNegativeButton("取消", null).show();
+                return false;
+            }
+        });
     }
 
     private void calcTotal(){
