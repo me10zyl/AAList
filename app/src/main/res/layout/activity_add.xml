@@ -81,4 +81,19 @@
             android:onClick="list"
             android:layout_above="@+id/tv2" android:layout_alignParentRight="true"
             android:layout_alignParentEnd="true"/>
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="@string/version"
+            android:id="@+id/textView6" android:layout_alignParentBottom="true" android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"/>
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:text="v"
+            android:layout_alignTop="@id/textView6"
+            android:id="@+id/textView8" android:layout_toLeftOf="@id/textView6"
+            />
 </RelativeLayout>

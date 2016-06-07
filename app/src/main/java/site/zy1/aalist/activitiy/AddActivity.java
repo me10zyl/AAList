@@ -5,10 +5,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
-import android.os.AsyncTask;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
+import android.net.Uri;
+import android.os.*;
 import android.support.v7.app.ActionBarActivity;
 import android.util.JsonReader;
 import android.util.JsonWriter;
@@ -22,10 +20,12 @@ import android.widget.Toast;
 import site.zy1.aalist.R;
 import site.zy1.aalist.model.AAListItem;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -35,9 +35,10 @@ public class AddActivity extends ActionBarActivity {
     private String username;
     private TextView tv_setName;
     private EditText et_balance, et_description, et_date;
+    private String version;
     private Handler handler = new Handler(new Handler.Callback() {
         @Override
-        public boolean handleMessage(Message message) {
+        public boolean handleMessage(final Message message) {
             switch (message.what) {
                 case 0:
                     final String balance = et_balance.getText().toString().trim();
@@ -109,6 +110,78 @@ public class AddActivity extends ActionBarActivity {
                         }
                     });
                     break;
+                case -3:
+                    new AsyncTask<String, Void, AAListItem>() {
+                        @Override
+                        protected AAListItem doInBackground(String... strings) {
+                            HttpURLConnection conn  = null;
+                            try {
+                                URL  url = new URL("http://" + address + "/version.json");
+                                conn = (HttpURLConnection) url.openConnection();
+                                conn.setRequestProperty("accept", "*/*");
+                                conn.setRequestProperty("connection", "Keep-Alive");
+                                conn.setRequestProperty("Content-Type",
+                                        "application/json");
+                                conn.setRequestProperty("charset", "utf-8");
+                                conn.setDoInput(true);
+                                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "UTF-8"));
+                                JsonReader jsonReader = new JsonReader(br);
+                                String newVersion = "";
+                                String downloadUrl = "";
+                                String message = "";
+                                jsonReader.beginObject();
+                                while(jsonReader.hasNext()){
+                                    String name = jsonReader.nextName();
+                                    if("version".equals(name)){
+                                        newVersion  = jsonReader.nextString();
+                                    }else if("url".equals(name)){
+                                        downloadUrl = jsonReader.nextString();
+                                    }else if("message".equals(name)){
+                                        message = jsonReader.nextString();
+                                    }
+                                }
+                                jsonReader.endObject();
+                                jsonReader.close();
+                                if(!newVersion.equals(version)){
+                                    Message m = new Message();
+                                    m.what = -4;
+                                    Bundle data = new Bundle();
+                                    data.putString("url", downloadUrl);
+                                    data.putString("message", message);
+                                    data.putString("version", newVersion);
+                                    m.setData(data);
+                                    handler.dispatchMessage(m);
+                                }
+                            } catch (MalformedURLException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }finally {
+                                if(conn!= null){
+                                    conn.disconnect();
+                                }
+                            }
+                            return null;
+                        }
+                    }.execute();
+                    break;
+                case -4:
+                    handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            AlertDialog.Builder builder = new AlertDialog.Builder(AddActivity.this);
+                            final Bundle data = message.getData();
+                            builder.setTitle("有新版本"+data.getString("version")+"了，是否要进行更新？（有更新一定要更新哦）"+data.getString("message")).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    Uri uri = Uri.parse(data.getString("url"));
+                                    Intent intent = new  Intent(Intent.ACTION_VIEW, uri);
+                                    startActivity(intent);
+                                }
+                            }).setNegativeButton("取消", null).show();
+                        }
+                    });
+                    break;
                 default:
                     break;
             }
@@ -133,6 +206,7 @@ public class AddActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add);
+        version = getResources().getString(R.string.version);
         sharedPreferences = getSharedPreferences("app", MODE_PRIVATE);
         tv_setName = (TextView) findViewById(R.id.tv_setName);
         et_balance = (EditText) findViewById(R.id.et1_balance);
@@ -143,6 +217,9 @@ public class AddActivity extends ActionBarActivity {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         et_date.setText(sdf.format(date));
         refreshName();
+        Message m = new Message();
+        m.what = -3;
+        handler.dispatchMessage(m);
     }
 
     private void refreshName() {
