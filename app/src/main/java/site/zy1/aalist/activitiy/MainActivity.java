@@ -1,9 +1,7 @@
 package site.zy1.aalist.activitiy;
 
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -17,8 +15,6 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
-import org.json.JSONObject;
-import org.json.JSONTokener;
 import site.zy1.aalist.R;
 import site.zy1.aalist.adapter.AAListAdapter;
 import site.zy1.aalist.adapter.TotalListAdapter;
@@ -230,27 +226,27 @@ public class MainActivity extends ActionBarActivity {
     private void calcTotal(){
         Calendar calendar = Calendar.getInstance();
         for(AAListItem aa : aaList){
-            TotalListItem totalListItem = new TotalListItem();
+            TotalListItem current = new TotalListItem();
             Date date = aa.getDate();
             calendar.setTime(date);
-            int month = calendar.get(Calendar.MONTH);
-            Log.i("month", month + "");
-            totalListItem.setMonth(month + 1);
-            if(totalList.contains(totalListItem)){
-                for(TotalListItem total: totalList){
-                    if(total.getMonth() == month){
-                        setBalance(total, aa);
-                        break;
-                    }
+            int month = calendar.get(Calendar.MONTH) + 1;
+            current.setMonth(month);
+            boolean existed = false;
+            for(TotalListItem total: totalList){
+                if(total.getMonth() == month){
+                    addBalance(total, aa);
+                    existed = true;
+                    break;
                 }
-            }else{
-                setBalance(totalListItem, aa);
-                totalList.add(totalListItem);
+            }
+            if(!existed){
+                addBalance(current, aa);
+                totalList.add(current);
             }
         }
     }
 
-    private void setBalance(TotalListItem total, AAListItem aa){
+    private void addBalance(TotalListItem total, AAListItem aa){
         if("曾艺伦".equals(aa.getName())){
             total.setSubtotalZyl(total.getSubtotalZyl() + aa.getBalance());
         }else if("彭万红".equals(aa.getName())){
