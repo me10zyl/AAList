@@ -58,4 +58,20 @@ public class TotalListItem {
     public void setTotal(double total) {
         this.total = total;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TotalListItem that = (TotalListItem) o;
+
+        return month == that.month;
+
+    }
+
+    @Override
+    public int hashCode() {
+        return month;
+    }
 }

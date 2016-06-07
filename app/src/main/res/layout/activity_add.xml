@@ -73,4 +73,12 @@
             android:text="你还没有设置名字！点击右上角菜单设置！"
             android:id="@+id/tv_setName" android:layout_alignParentTop="true" android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true" android:textColor="#ff0000"/>
+    <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="查看分摊列表"
+            android:id="@+id/btn_list"
+            android:onClick="list"
+            android:layout_above="@+id/tv2" android:layout_alignParentRight="true"
+            android:layout_alignParentEnd="true"/>
 </RelativeLayout>
